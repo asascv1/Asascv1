@@ -18,9 +18,9 @@ local redzlib = {
 			}),
 			["Color Hub 2"] = Color3.fromRGB(0, 0, 0),
 			["Color Stroke"] = Color3.fromRGB(100, 100, 100),
-			["Color Theme"] = Color3.fromRGB(239, 224, 187),
+			["Color Theme"] = Color3.fromRGB(255, 200, 210),
 			["Color Text"] = Color3.fromRGB(239, 224, 187),
-			["Color Dark Text"] = Color3.fromRGB(239, 224, 187)
+			["Color Dark Text"] = Color3.fromRGB(255, 200, 210)
 		},
 		Dark = {
 			["Color Hub 1"] = ColorSequence.new({
@@ -1636,33 +1636,57 @@ function redzlib:MakeWindow(Configs)
 		MainFrame.Visible = not MainFrame.Visible
 	end
 	function Window:AddMinimizeButton(Configs)
-		local Button = MakeDrag(Create("ImageButton", ScreenGui, {
-			Size = UDim2.fromOffset(35, 35),
-			Position = UDim2.fromScale(0.15, 0.15),
-			BackgroundTransparency = 1,
-			BackgroundColor3 = Theme["Color Hub 2"],
-			AutoButtonColor = false
-		}))
-		
-		local Stroke, Corner
-		if Configs.Corner then
-			Corner = Make("Corner", Button)
-			SetProps(Corner, Configs.Corner)
-		end
-		if Configs.Stroke then
-			Stroke = Make("Stroke", Button)
-			SetProps(Stroke, Configs.Corner)
-		end
-		
-		SetProps(Button, Configs.Button)
-		Button.Activated:Connect(Window.Minimize)
-		
-		return {
-			Stroke = Stroke,
-			Corner = Corner,
-			Button = Button
-		}
-	end
+    -- الصور الجديدة (اختيارية)
+    local ShowImage = Configs.ShowImage or "rbxassetid://10734896206"  -- صورة لما الواجهة ظاهرة
+    local HideImage = Configs.HideImage or "rbxassetid://10734924532"  -- صورة لما الواجهة مخفية
+    
+    -- إنشاء الزر
+    local Button = MakeDrag(Create("ImageButton", ScreenGui, {
+        Size = UDim2.fromOffset(35, 35),
+        Position = UDim2.fromScale(0.15, 0.15),
+        BackgroundTransparency = 1,
+        BackgroundColor3 = Theme["Color Hub 2"],
+        AutoButtonColor = false,
+        Image = MainFrame.Visible and ShowImage or HideImage  -- الصورة الابتدائية
+    }))
+
+    local Stroke, Corner
+    if Configs.Corner then
+        Corner = Make("Corner", Button)
+        SetProps(Corner, Configs.Corner)
+    end
+    if Configs.Stroke then
+        Stroke = Make("Stroke", Button)
+        SetProps(Stroke, Configs.Stroke)
+    end
+
+    SetProps(Button, Configs.Button)
+    
+    -- دالة تغيير الصورة
+    local function UpdateButtonImage()
+        if MainFrame.Visible then
+            Button.Image = ShowImage
+        else
+            Button.Image = HideImage
+        end
+    end
+    
+    -- ربط الضغط على الزر
+    Button.Activated:Connect(function()
+        Window:Minimize()
+        task.wait(0.1)  -- انتظار صغير
+        UpdateButtonImage()  -- تحديث الصورة
+    end)
+    
+    -- تحديث الصورة لما الواجهة تتغير
+    MainFrame:GetPropertyChangedSignal("Visible"):Connect(UpdateButtonImage)
+
+    return {
+        Stroke = Stroke,
+        Corner = Corner,
+        Button = Button
+    }
+end 
 	function Window:Set(Val1, Val2)
 		if type(Val1) == "string" and type(Val2) == "string" then
 			Title.Text = Val1
